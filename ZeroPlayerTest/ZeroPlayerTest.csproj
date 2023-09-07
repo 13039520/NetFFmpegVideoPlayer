@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="FFmpeg\**" />
+	  <EmbeddedResource Remove="FFmpeg\**" />
+	  <None Remove="FFmpeg\**" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="NAudio" Version="2.2.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\ZeroPlayer\ZeroPlayer.csproj" />
+	</ItemGroup>
+
+</Project>

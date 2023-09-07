@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33815.320
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZeroPlayerTest", "ZeroPlayerTest\ZeroPlayerTest.csproj", "{BE76F56C-9299-4ACE-88B8-7959A602BE2E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroPlayer", "ZeroPlayer\ZeroPlayer.csproj", "{7CD5B6DB-D635-4F36-A895-089934BB86DD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BE76F56C-9299-4ACE-88B8-7959A602BE2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE76F56C-9299-4ACE-88B8-7959A602BE2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE76F56C-9299-4ACE-88B8-7959A602BE2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE76F56C-9299-4ACE-88B8-7959A602BE2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CD5B6DB-D635-4F36-A895-089934BB86DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CD5B6DB-D635-4F36-A895-089934BB86DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CD5B6DB-D635-4F36-A895-089934BB86DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CD5B6DB-D635-4F36-A895-089934BB86DD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BDA1947D-D592-453B-9670-EF7E833A00A7}
+	EndGlobalSection
+EndGlobal
