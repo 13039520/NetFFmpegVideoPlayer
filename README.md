@@ -1,7 +1,7 @@
 # Introduction
 On the windows operating system, call FFmpeg to parse video files through C#, and then provide playback callbacks for audio and video.
 ## Dependencies
-.NET-6.0 [FFmpeg-6.0](https://ffmpeg.org/download.html) [FFmpeg.AutoGen-6.0](https://github.com/Ruslan-B/FFmpeg.AutoGen) [SkiaSharp-2.88.5](https://github.com/mono/SkiaSharp)
+.NET-6.0 [[FFmpeg-6.0](https://ffmpeg.org/download.html)] [[FFmpeg.AutoGen-6.0](https://github.com/Ruslan-B/FFmpeg.AutoGen)] [[SkiaSharp-2.88.5](https://github.com/mono/SkiaSharp)]
 ## Example
 ```C#
 //Frist: RegisterFFmpegBinaries
