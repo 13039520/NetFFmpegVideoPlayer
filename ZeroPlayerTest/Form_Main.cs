@@ -36,8 +36,8 @@ namespace ZeroPlayerTest
             base.OnLoad(e);
             string[] files = new string[]
                 {
-                    @"E:\VideoTools\videos\²ÌÒÀÁÖ-ÎèÄï.mp4",
-                    @"E:\VideoTools\videos\¼ÓÖÝÂÃ¹Ý.mp4"
+                    @"E:\VideoTools\videos\001.mp4",
+                    @"E:\VideoTools\videos\002.mp4"
                 };
             Play(files[1]);
         }
@@ -66,13 +66,12 @@ namespace ZeroPlayerTest
                 return;
             }
             double duration = media.Duration * ffmpeg.av_q2d(ffmpeg.av_get_time_base_q());
-            TimeSpan dts = TimeSpan.FromSeconds(duration);
 
             StringBuilder s = new StringBuilder("info:");
             var info = media.GetContextInfo();
             info.ToList().ForEach(x => s.Append($"\r\n{x.Key} = {x.Value}"));
             s.Append("\r\n-----------------------");
-            s.Append($"\r\nDuration: {dts.ToString(@"hh\:mm\:ss")}");
+            s.Append($"\r\nDuration: {TimeSpan.FromSeconds(duration).ToString(@"hh\:mm\:ss")}");
             s.Append($"\r\nV_CodecName: {media.V_CodecName}");
             s.Append($"\r\nV_FPS: {ffmpeg.av_q2d(media.V_FrameRate)}");
             s.Append($"\r\nV_PixelFormat: {media.V_PixelFormat}");
