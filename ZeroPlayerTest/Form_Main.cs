@@ -18,7 +18,6 @@ namespace ZeroPlayerTest
 {
     public partial class Form_Main : Form
     {
-        //NAudioÒôÆµ²¥·Å×é¼þ
         private WaveOut? waveOut;
         private BufferedWaveProvider? bufferedWaveProvider;
         private ZeroPlayer.Media? media = null;
