@@ -18,35 +18,49 @@ namespace ZeroPlayer
     public unsafe class Media : IDisposable
     {
         #region -- field --
-        private readonly AVFormatContext* _avFormatContext;
-        private readonly AVPacket* _pPacket;
-        private readonly AVFrame* _pFrame;
+        private  AVFormatContext* _avFormatContext;
+        private AVPacket* _pPacket;
 
-        private readonly int _vStreamIndex;
-        private readonly AVCodecContext* _vCodecContext;
-        private readonly AVPacket* _vPacket;
-        private readonly AVFrame* _vFrame;
-        private readonly AVFrame* _vHWDecodedFrame;
-        private readonly SwsContext* _vSwsContext;
+        private  int _vStreamIndex;
+        private  AVCodecContext* _vCodecContext;
+        private  AVFrame* _vFrame;
+        private  AVFrame* _vHWDecodedFrame;
+        private  SwsContext* _vSwsContext;
         private int _vbufferSize;
-        private readonly IntPtr _vBufferPtr;
-        private readonly byte_ptr4 _vTargetData;
-        private readonly int4 _vTargetLinesize;
-        private readonly int _vTargetDataSize;
+        private  IntPtr _vBufferPtr;
+        private  byte_ptr4 _vTargetData;
+        private  int4 _vTargetLinesize;
+        private  int _vTargetDataSize;
 
-        private readonly int _aStreamIndex;
-        private readonly AVCodecContext* _aCodecContext;
-        private readonly AVPacket* _aPacket;
-        private readonly AVFrame* _aFrame;
-        private readonly AVFrame* _aHWDecodedFrame;
-        private readonly int _aBitsPerSample;
-        private readonly SwrContext* _aSwrContext;
-        private readonly IntPtr _aBuffer;
-        private readonly byte* _aBufferPtr;
-        private readonly byte** _aSourceData = null;
-        private readonly byte** _aDestinationData = null;
+        private  int _aStreamIndex;
+        private  AVCodecContext* _aCodecContext;
+        private  AVFrame* _aFrame;
+        private  AVFrame* _aHWDecodedFrame;
+        private  int _aBitsPerSample;
+        private  SwrContext* _aSwrContext;
+        private  IntPtr _aBuffer;
+        private  byte* _aBufferPtr;
+        private  byte** _aSourceData = null;
+        private  byte** _aDestinationData = null;
 
         private Models.MediaState _mediaState = Models.MediaState.None;
+        private long _duration;
+        private long _bitrate;
+        private string _vCodecName;
+        private int _vWidth;
+        private int _vHeight;
+        private AVPixelFormat _vPixelFormat;
+        private AVPixelFormat _vConvertedPixelFormat;
+        private AVRational _vTimeBase;
+        private AVRational _vFrameRate;
+        private bool _hasAudio;
+        private AVRational _aTimeBase;
+        private string _aCodecName;
+        private int _aSampleRate;
+        private int _aChannels;
+        private ulong _aChannelLayout;
+        private AVSampleFormat _aSampleFmt;
+        private AVSampleFormat _aConvertedSampleFmt;
         private string _errorMessage = string.Empty;
         private DateTime _startPlayingTime = DateTime.MinValue;
         private TimeSpan _audioClock = TimeSpan.Zero;
@@ -55,6 +69,9 @@ namespace ZeroPlayer
         private System.Collections.Concurrent.ConcurrentQueue<Models.VideoFrame> _vFrames = new System.Collections.Concurrent.ConcurrentQueue<Models.VideoFrame>();
         private System.Collections.Concurrent.ConcurrentQueue<Models.AudioFrame> _aFrames = new System.Collections.Concurrent.ConcurrentQueue<Models.AudioFrame>();
         private bool _isDisposed = false;
+        private bool isLiveStream = false;
+
+
         #endregion
 
         #region  -- property --
@@ -62,28 +79,26 @@ namespace ZeroPlayer
         public string Url { get; }
         public AVHWDeviceType HWDeviceType { get; }
         public int PictureQuality { get; }
-        public long Duration { get; }
+        public long Duration { get { return _duration; } }
         public TimeSpan CurrentPosition { get { return GetReferenceClock(); } }
-        public long Bitrate { get;}
-        public string V_CodecName { get; }
-        public int V_Width { get; }
-        public int V_Height { get; }
-        public AVPixelFormat V_PixelFormat { get; }
-        public AVPixelFormat V_ConvertedPixelFormat { get; }
-        public AVRational V_TimeBase { get; }
-        public AVRational V_FrameRate { get; }
-        public bool HasAudio { get; }
-        public AVRational A_TimeBase { get; }
-        public string A_CodecName { get; }
-        public int A_SampleRate { get; }
-        public int A_Channels { get; }
-        public ulong A_ChannelLayout { get; }
-        public AVSampleFormat A_SampleFmt { get; }
-        public AVSampleFormat A_ConvertedSampleFmt { get; }
-        //采样次数
+        public long Bitrate { get { return _bitrate; } }
+        public string V_CodecName { get { return _vCodecName; } }
+        public int V_Width { get { return _vWidth; } }
+        public int V_Height { get { return _vHeight; } }
+        public AVPixelFormat V_PixelFormat { get { return _vPixelFormat; } }
+        public AVPixelFormat V_ConvertedPixelFormat { get { return _vConvertedPixelFormat; } }
+        public AVRational V_TimeBase { get { return _vTimeBase; } }
+        public AVRational V_FrameRate { get { return _vFrameRate; } }
+        public bool HasAudio { get { return _hasAudio; } }
+        public AVRational A_TimeBase { get { return _aTimeBase; } }
+        public string A_CodecName { get { return _aCodecName; } }
+        public int A_SampleRate { get { return _aSampleRate; } }
+        public int A_Channels { get { return _aChannels; } }
+        public ulong A_ChannelLayout { get { return _aChannelLayout; } }
+        public AVSampleFormat A_SampleFmt { get { return _aSampleFmt; } }
+        public AVSampleFormat A_ConvertedSampleFmt { get { return _aConvertedSampleFmt; } }
         public long A_BitsPerSample { get { return _aBitsPerSample; } }
         public string ErrorMessage { get { return _errorMessage; } }
-        private bool isLiveStream = false;
         #endregion
 
         public event Action<Models.AudioFrame> OnAudioPlay;
@@ -110,27 +125,30 @@ namespace ZeroPlayer
                 usePictureQuality = 100;
             }
             this.PictureQuality = usePictureQuality;
-
+            LoadMedia();
+        }
+        private int LoadMedia()
+        {
             int error = 0;
             _avFormatContext = ffmpeg.avformat_alloc_context();
             var tempFormat = _avFormatContext;
-            error = ffmpeg.avformat_open_input(&tempFormat, url, null, null);
+            error = ffmpeg.avformat_open_input(&tempFormat, this.Url, null, null);
             if (error < 0)
             {
                 _mediaState = Models.MediaState.Error;
                 _errorMessage = "avformat_open_input:" + av_strerror(error);
-                return;
+                return error;
             }
             error = ffmpeg.avformat_find_stream_info(_avFormatContext, null);
             if (error < 0)
             {
                 _mediaState = Models.MediaState.Error;
                 _errorMessage = "avformat_find_stream_info:" + av_strerror(error);
-                return;
+                return error;
             }
 
-            Duration = _avFormatContext->duration;
-            Bitrate = _avFormatContext->bit_rate;
+            _duration = _avFormatContext->duration;
+            _bitrate = _avFormatContext->bit_rate;
 
             #region -- video --
             AVCodec* vcodec = null;
@@ -139,17 +157,17 @@ namespace ZeroPlayer
             {
                 _mediaState = Models.MediaState.Error;
                 _errorMessage = "av_find_best_stream:" + av_strerror(error);
-                return;
+                return error;
             }
             _vCodecContext = ffmpeg.avcodec_alloc_context3(vcodec);
             if (HWDeviceType != AVHWDeviceType.AV_HWDEVICE_TYPE_NONE)
             {
                 error = ffmpeg.av_hwdevice_ctx_create(&_vCodecContext->hw_device_ctx, HWDeviceType, null, null, 0);
-                if (error<0)
+                if (error < 0)
                 {
                     _mediaState = Models.MediaState.Error;
                     _errorMessage = "av_hwdevice_ctx_create:" + av_strerror(error);
-                    return;
+                    return error;
                 }
                 _vHWDecodedFrame = ffmpeg.av_frame_alloc();
             }
@@ -158,28 +176,26 @@ namespace ZeroPlayer
             {
                 _mediaState = Models.MediaState.Error;
                 _errorMessage = "avcodec_parameters_to_context:" + av_strerror(error);
-                return;
+                return error;
             }
             error = ffmpeg.avcodec_open2(_vCodecContext, vcodec, null);
             if (error < 0)
             {
                 _mediaState = Models.MediaState.Error;
                 _errorMessage = "avcodec_open2:" + av_strerror(error);
-                return;
+                return error;
             }
             _pPacket = ffmpeg.av_packet_alloc();
-            _pFrame = ffmpeg.av_frame_alloc();
             _aHWDecodedFrame = ffmpeg.av_frame_alloc();
-            _vPacket = ffmpeg.av_packet_alloc();
             _vFrame = ffmpeg.av_frame_alloc();
             var vstream = _avFormatContext->streams[_vStreamIndex];
-            V_CodecName = ffmpeg.avcodec_get_name(vcodec->id);
-            V_Width = _vCodecContext->width;
-            V_Height = _vCodecContext->height;
-            V_PixelFormat = _vCodecContext->pix_fmt;
-            V_TimeBase = _avFormatContext->streams[_vStreamIndex]->time_base;
-            V_FrameRate = _avFormatContext->streams[_vStreamIndex]->r_frame_rate;
-            V_ConvertedPixelFormat = AVPixelFormat.AV_PIX_FMT_BGR24;
+            _vCodecName = ffmpeg.avcodec_get_name(vcodec->id);
+            _vWidth = _vCodecContext->width;
+            _vHeight = _vCodecContext->height;
+            _vPixelFormat = _vCodecContext->pix_fmt;
+            _vTimeBase = _avFormatContext->streams[_vStreamIndex]->time_base;
+            _vFrameRate = _avFormatContext->streams[_vStreamIndex]->r_frame_rate;
+            _vConvertedPixelFormat = AVPixelFormat.AV_PIX_FMT_BGR24;
 
             _vSwsContext = ffmpeg.sws_getContext(V_Width, V_Height, V_PixelFormat, V_Width, V_Height, V_ConvertedPixelFormat, ffmpeg.SWS_FAST_BILINEAR, null, null, null);
             _vbufferSize = ffmpeg.av_image_get_buffer_size(V_ConvertedPixelFormat, V_Width, V_Height, 1);
@@ -191,16 +207,16 @@ namespace ZeroPlayer
             {
                 _mediaState = Models.MediaState.Error;
                 _errorMessage = "av_image_fill_arrays:" + av_strerror(error);
-                return;
+                return error;
             }
             #endregion
 
             AVCodec* codec;
             _aStreamIndex = ffmpeg.av_find_best_stream(_avFormatContext, AVMediaType.AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
-            HasAudio = _aStreamIndex > -1;
-            if (HasAudio)
+            _hasAudio = _aStreamIndex > -1;
+            if (_hasAudio)
             {
-                A_ConvertedSampleFmt = AVSampleFormat.AV_SAMPLE_FMT_S16;
+                _aConvertedSampleFmt = AVSampleFormat.AV_SAMPLE_FMT_S16;
                 var audioStream = _avFormatContext->streams[_aStreamIndex];
                 _aCodecContext = ffmpeg.avcodec_alloc_context3(codec);
                 error = ffmpeg.avcodec_parameters_to_context(_aCodecContext, audioStream->codecpar);
@@ -208,28 +224,27 @@ namespace ZeroPlayer
                 {
                     _mediaState = Models.MediaState.Error;
                     _errorMessage = "avcodec_parameters_to_context:" + av_strerror(error);
-                    return;
+                    return error;
                 }
                 error = ffmpeg.avcodec_open2(_aCodecContext, codec, null);
                 if (error < 0)
                 {
                     _mediaState = Models.MediaState.Error;
                     _errorMessage = "avcodec_open2:" + av_strerror(error);
-                    return;
+                    return error;
                 }
-                A_TimeBase = audioStream->time_base;
-                A_CodecName = ffmpeg.avcodec_get_name(codec->id);
-                Bitrate = _aCodecContext->bit_rate;
-                A_Channels = _aCodecContext->ch_layout.nb_channels;
-                A_ChannelLayout = _aCodecContext->channel_layout;
-                A_SampleRate = _aCodecContext->sample_rate;
-                A_SampleFmt = _aCodecContext->sample_fmt;
+                _aTimeBase = audioStream->time_base;
+                _aCodecName = ffmpeg.avcodec_get_name(codec->id);
+                _aChannels = _aCodecContext->ch_layout.nb_channels;
+                _aChannelLayout = _aCodecContext->channel_layout;
+                _aSampleRate = _aCodecContext->sample_rate;
+                _aSampleFmt = _aCodecContext->sample_fmt;
                 _aBitsPerSample = error = ffmpeg.av_samples_get_buffer_size(null, 2, _aCodecContext->frame_size, A_ConvertedSampleFmt, 1);
                 if (error < 0)
                 {
                     _mediaState = Models.MediaState.Error;
                     _errorMessage = "av_samples_get_buffer_size:" + av_strerror(error);
-                    return;
+                    return error;
                 }
                 _aBuffer = Marshal.AllocHGlobal((int)_aBitsPerSample);
                 _aBufferPtr = (byte*)_aBuffer;
@@ -237,13 +252,12 @@ namespace ZeroPlayer
                 _aSwrContext = ffmpeg.swr_alloc();
                 ResamplingAudioConvertOpt(_aSwrContext, (int)A_ChannelLayout, A_ConvertedSampleFmt, (int)A_SampleRate, (int)A_ChannelLayout, A_SampleFmt, (int)A_SampleRate);
                 ffmpeg.swr_init(_aSwrContext);
-                _aPacket = ffmpeg.av_packet_alloc();
                 _aFrame = ffmpeg.av_frame_alloc();
             }
 
             _mediaState = Models.MediaState.Ready;
+            return 0;
         }
-
         private string av_strerror(int error)
         {
             var bufferSize = 1024;
@@ -317,8 +331,6 @@ namespace ZeroPlayer
                     {
                         Thread.Sleep(6);
                     }
-                    ffmpeg.av_frame_unref(_pFrame);
-                    ffmpeg.av_frame_unref(_aHWDecodedFrame);
                     int error;
                     AVFrame frame;
 
@@ -334,10 +346,12 @@ namespace ZeroPlayer
                     {
                         if (psi == _vStreamIndex)
                         {
+                            ffmpeg.av_frame_unref(_vFrame);
                             ffmpeg.avcodec_send_packet(_vCodecContext, _pPacket);
                         }
                         else if (psi == _aStreamIndex)
                         {
+                            ffmpeg.av_frame_unref(_aFrame);
                             ffmpeg.avcodec_send_packet(_aCodecContext, _pPacket);
                         }
                         //Wrong avframe.duration value on 32-bit apps,
@@ -357,6 +371,7 @@ namespace ZeroPlayer
                         }
                         if (_vCodecContext->hw_device_ctx != null)
                         {
+                            ffmpeg.av_frame_unref(_vHWDecodedFrame);
                             ffmpeg.av_hwframe_transfer_data(_aHWDecodedFrame, _vFrame, 0);
                             frame = *_vHWDecodedFrame;
                         }
@@ -377,6 +392,7 @@ namespace ZeroPlayer
                         }
                         if (_aCodecContext->hw_device_ctx != null)
                         {
+                            ffmpeg.av_frame_unref(_aHWDecodedFrame);
                             ffmpeg.av_hwframe_transfer_data(_aHWDecodedFrame, _aFrame, 0);
                             frame = *_aHWDecodedFrame;
                         }
@@ -548,6 +564,11 @@ namespace ZeroPlayer
                 if (!HasAudio)
                 {
                     OnStateChangeTrigger();
+                    if (_mediaState == Models.MediaState.Stop || _mediaState == Models.MediaState.End)
+                    {
+                        FreeResources();
+                        LoadMedia();
+                    }
                 }
             });
             if (HasAudio)
@@ -604,6 +625,11 @@ namespace ZeroPlayer
                         #endregion
                     }
                     OnStateChangeTrigger();
+                    if (_mediaState == Models.MediaState.Stop || _mediaState == Models.MediaState.End)
+                    {
+                        FreeResources();
+                        LoadMedia();
+                    }
                 });
             }
         }
@@ -615,6 +641,38 @@ namespace ZeroPlayer
                 OnStateChangeTrigger();
             }
             return reval;
+        }
+        private void FreeResources()
+        {
+            try
+            {
+                var frame = _vFrame;
+                ffmpeg.av_frame_free(&frame);
+                if (_vHWDecodedFrame != null)
+                {
+                    frame = _vHWDecodedFrame;
+                    ffmpeg.av_frame_free(&frame);
+                }
+                var packet = _pPacket;
+                ffmpeg.av_packet_free(&packet);
+
+                ffmpeg.avcodec_close(_vCodecContext);
+
+                if (HasAudio)
+                {
+                    frame = _aFrame;
+                    ffmpeg.av_frame_free(&frame);
+                    ffmpeg.avcodec_close(_aCodecContext);
+                    Marshal.FreeHGlobal(_aBuffer);
+                }
+
+                Marshal.FreeHGlobal(_vBufferPtr);
+                ffmpeg.sws_freeContext(_vSwsContext);
+
+                var avFormatContext = _avFormatContext;
+                ffmpeg.avformat_close_input(&avFormatContext);
+            }
+            catch { }
         }
 
         #region -- play ctrl --
@@ -686,39 +744,7 @@ namespace ZeroPlayer
             if (_isDisposed) { return; }
             _isDisposed = true;
             _mediaState = Models.MediaState.None;
-            var frame = _vFrame;
-            ffmpeg.av_frame_free(&frame);
-            frame = _pFrame;
-            ffmpeg.av_frame_free(&frame);
-            if (_vHWDecodedFrame != null)
-            {
-                frame = _vHWDecodedFrame;
-                ffmpeg.av_frame_free(&frame);
-            }
-
-            var packet = _vPacket;
-            ffmpeg.av_packet_free(&packet);
-            packet = _pPacket;
-            ffmpeg.av_packet_free(&packet);
-
-            ffmpeg.avcodec_close(_vCodecContext);
-
-            if (HasAudio)
-            {
-                frame = _aFrame;
-                ffmpeg.av_frame_free(&frame);
-                packet = _aPacket;
-                ffmpeg.av_packet_free(&packet);
-                ffmpeg.avcodec_close(_aCodecContext);
-                Marshal.FreeHGlobal(_aBuffer);
-            }
-
-            Marshal.FreeHGlobal(_vBufferPtr);
-            ffmpeg.sws_freeContext(_vSwsContext);
-            
-            var avFormatContext = _avFormatContext;
-            ffmpeg.avformat_close_input(&avFormatContext);
-
+            FreeResources();
         }
 
     }

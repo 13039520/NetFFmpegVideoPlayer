@@ -109,10 +109,7 @@ namespace ZeroPlayerTest
         {
             if (obj == ZeroPlayer.Models.MediaState.Stop || obj == ZeroPlayer.Models.MediaState.End)
             {
-                if (bufferedWaveProvider != null)
-                {
-                    bufferedWaveProvider.ClearBuffer();
-                }
+                
             }
             _ShowMsg("media state=>{0}", obj.ToString());
         }
