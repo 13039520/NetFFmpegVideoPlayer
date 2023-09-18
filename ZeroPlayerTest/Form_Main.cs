@@ -35,8 +35,8 @@ namespace ZeroPlayerTest
             base.OnLoad(e);
             string[] files = new string[]
                 {
-                    @"E:\VideoTools\videos\001.mp4",
-                    @"E:\VideoTools\videos\002.mp4"
+                    @"E:\VideoTools\videos\≤Ã“¿¡÷-ŒËƒÔ.mp4",
+                    @"E:\VideoTools\videos\222.mp4"
                 };
             Play(files[1]);
         }
