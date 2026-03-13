@@ -10,53 +10,8 @@
 		<Folder Include="FFmpeg" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Include="..\FFmpeg\x64\avcodec-60.dll" Link="FFmpeg\x64\avcodec-60.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x64\avdevice-60.dll" Link="FFmpeg\x64\avdevice-60.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x64\avfilter-9.dll" Link="FFmpeg\x64\avfilter-9.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x64\avformat-60.dll" Link="FFmpeg\x64\avformat-60.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x64\avutil-58.dll" Link="FFmpeg\x64\avutil-58.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x64\postproc-57.dll" Link="FFmpeg\x64\postproc-57.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x64\swresample-4.dll" Link="FFmpeg\x64\swresample-4.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x64\swscale-7.dll" Link="FFmpeg\x64\swscale-7.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x86\avcodec-60.dll" Link="FFmpeg\x86\avcodec-60.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x86\avdevice-60.dll" Link="FFmpeg\x86\avdevice-60.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x86\avfilter-9.dll" Link="FFmpeg\x86\avfilter-9.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x86\avformat-60.dll" Link="FFmpeg\x86\avformat-60.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x86\avutil-58.dll" Link="FFmpeg\x86\avutil-58.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x86\postproc-57.dll" Link="FFmpeg\x86\postproc-57.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x86\swresample-4.dll" Link="FFmpeg\x86\swresample-4.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\FFmpeg\x86\swscale-7.dll" Link="FFmpeg\x86\swscale-7.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<None Include="..\FFmpeg\**\*.*" CopyToOutputDirectory="PreserveNewest">
+			<Link>FFmpeg\%(RecursiveDir)%(Filename)%(Extension)</Link>
 		</None>
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
